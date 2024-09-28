@@ -4,9 +4,10 @@
   canvas.width = innerWidth;
   canvas.height = innerHeight;
   canvas.style.backgroundColor = "#222";
+  // const user = new User(); and..
   canvas.addEventListener("click", clickHandler);
 
-  /* constants  */
+  /* constants */
 
   const GRID_SIZE = 300;
   const GRID_OFFSET_X = (canvas.width - GRID_SIZE) / 2;
@@ -18,159 +19,123 @@
 
   /* variables */
 
-  var board; 
-  var target;
-  var start;
-  var result;
-  var winner;
-  var turn;
-  var lot = false;
+  var board = [
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+  ]
+
+  var lot = Math.ceil(Math.random() * 2);
+  var turn = lot;
+  var bingo;
+  var drawn;
   var row, col;
+  var count = 0;
+  var done = false;
 
   /* run the game */
-    
-  setInterval(run, 10);
-    
-  function run() {
+
+  setInterval(() => {
     clearCanvas();
     drawBoard();
 
-    if (!start) {
-      initialize();
-      return;
+    if (count < 2) {
+      if (lot == USER) {
+        drawMessage("YOU FIRST");
+      } else {
+        drawMessage("COM FIRST");
+      }
     }
 
-    getResult();
     drawSymbol();
 
-    if (result) {
-      drawResult();
+    bingo = isBingo();
+    drawn = isDrawn();
+
+    if (bingo || drawn) {
+      if (bingo) {
+        if (bingo == USER) {
+          drawMessage("YOU WIN!");
+        } else {
+          drawMessage("YOU LOSE!");
+        }
+      } else {
+        drawMessage("DRAW!");
+      }
+
+      done = true;
     } else {
       if (turn == COM) {
         setTimeout(com, 1000);
         turn = null;
       }
     }
-  }
-
-  function initialize() {
-    result = null;
-    winner = null;
-    board = [
-      [0, 0, 0],
-      [0, 0, 0],
-      [0, 0, 0],
-    ]
-
-    if (!lot) {
-      turn = Math.ceil(Math.random() * 2);
-      lot = true;
-    }
-
-    var message = (turn == USER ? "YOU" : "COM") + " First, Ready?";
-    
-    drawMessage(message);
-  }
+  }, 10);
 
   /* functions */
 
   function com() {
-    setTarget([0, 0], [0, 1], [0, 2]);
-    setTarget([1, 0], [1, 1], [1, 2]);
-    setTarget([2, 0], [2, 1], [2, 2]);
-    setTarget([0, 0], [1, 0], [2, 0]);
-    setTarget([0, 1], [1, 1], [2, 1]);
-    setTarget([0, 2], [1, 2], [2, 2]);
-    setTarget([0, 0], [1, 1], [2, 2]);
-    setTarget([0, 2], [1, 1], [2, 0]);
+    while (true) {
+      var r = Math.floor(Math.random() * 3);
+      var c = Math.floor(Math.random() * 3);
 
-    if (target != null) { 
-      var [tr, tc] = target;
-      board[tr][tc] = COM;
-      target = null;
-    } else {
-      while (true) {
-        var r = Math.floor(Math.random() * 3);
-        var c = Math.floor(Math.random() * 3);
-
-        if (result) {
-          break;
-        }
-
-        if (board[r][c] == 0) {
-          board[r][c] = COM;
-          break;
-        }
+      if (board[r][c] == 0) {
+        board[r][c] = COM;
+        count++;
+        break;
       }
     }
 
     turn = USER;
   }
 
-  function setTarget([r1, c1], [r2, c2], [r3, c3]) {
-    if (
-      board[r2][c2] != 0
-      && board[r2][c2] == board[r3][c3]
-      && board[r1][c1] == 0
-    ) {
-      target = [r1, c1];
-    } else if (
-      board[r1][c1] != 0
-      && board[r1][c1] == board[r3][c3]
-      && board[r2][c2] == 0
-    ) {
-      target = [r2, c2];
-    } else if (
-      board[r1][c1] != 0
-      && board[r1][c1] == board[r2][c2]
-      && board[r3][c3] == 0
-    ) {
-      target = [r3, c3];
-    }
-  }
-
-  function getResult() {
-    // 1. get bingo
-    checkBingo([0, 0], [0, 1], [0, 2]);
-    checkBingo([1, 0], [1, 1], [1, 2]);
-    checkBingo([2, 0], [2, 1], [2, 2]);
-    checkBingo([0, 0], [1, 0], [2, 0]);
-    checkBingo([0, 1], [1, 1], [2, 1]);
-    checkBingo([0, 2], [1, 2], [2, 2]);
-    checkBingo([0, 0], [1, 1], [2, 2]);
-    checkBingo([0, 2], [1, 1], [2, 0]);
-
-    if (result == "DONE") {
-      return;
-    }
-
-    // 2. get draw
-    var drawn = true;
-
+  function isBingo() {
+    // horizontal bingo
     for (var r = 0; r < 3; r++) {
-      for (var c = 0; c < 3; c++) {
-        if (board[r][c] == 0) {
-          drawn = false;
-          break;
-        }
+      if (
+        board[r][0] != 0
+        && board[r][0] == board[r][1] 
+        && board[r][1] == board[r][2]
+      ) {
+        return board[r][0];
+      }
+    }
+    
+    // vertical bingo
+    for (var c = 0; c < 3; c++) {
+      if (
+        board[0][c] != 0
+        && board[0][c] == board[1][c] 
+        && board[1][c] == board[2][c]
+      ) {
+        return board[0][c];
       }
     }
 
-    if (drawn) {
-      result = "DRAW";
-      winner = null;
+    // cross bingo (\)
+    if (
+      board[0][0] != 0
+      && board[0][0] == board[1][1] 
+      && board[1][1] == board[2][2]
+    ) {
+      return board[0][0];
     }
+
+    // cross bingo (/)
+    if (
+      board[0][2] != 0
+      && board[0][2] == board[1][1] 
+      && board[1][1] == board[2][0]
+    ) {
+      return board[0][2];
+    }
+    
+    // no bingo
+    return false;
   }
 
-  function checkBingo([r1, c1], [r2, c2], [r3, c3]) {
-    if (
-      board[r1][c1] != 0 
-      && board[r1][c1] == board[r2][c2] 
-      && board[r2][c2] == board[r3][c3]
-    ) {
-      result = "DONE";
-      winner = board[r1][c1];
-    }
+  function isDrawn() {
+    return count == 9;
   }
 
   /* draw */
@@ -179,18 +144,22 @@
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
 
-  function drawResult() {
-    if (result == "DONE") {
-      if (winner == USER) {
-        drawMessage("YOU WIN");
-      } else {
-        drawMessage("YOU LOSE");
-      }
+  function drawBoard() {
+    ctx.beginPath();
+    ctx.strokeStyle = "#444";
+    ctx.lineWidth = 4;
+
+    for (var r = 1; r < GRID_LINE_COUNT; r++) {
+      ctx.moveTo(GRID_OFFSET_X, GRID_OFFSET_Y + (GRID_ITEM_SIZE * r));
+      ctx.lineTo(GRID_OFFSET_X + GRID_SIZE, GRID_OFFSET_Y + (GRID_ITEM_SIZE * r));
     }
 
-    if (result == "DRAW") {
-      drawMessage("DRAW!");
+    for (var c = 1; c < GRID_LINE_COUNT; c++) {
+      ctx.moveTo(GRID_OFFSET_X + (GRID_ITEM_SIZE * c), GRID_OFFSET_Y);
+      ctx.lineTo(GRID_OFFSET_X + (GRID_ITEM_SIZE * c), GRID_OFFSET_Y + GRID_SIZE);
     }
+
+    ctx.stroke();
   }
   
   function drawSymbol() {
@@ -226,45 +195,13 @@
     ctx.font = "20px Monospace";
     ctx.fillStyle = "#fff";
     ctx.textAlign = "center";
-    ctx.fillText(
-      message,
-      canvas.width / 2,
-      60,
-    );
-  }
-
-  function drawBoard() {
-    ctx.beginPath();
-    ctx.strokeStyle = "#444";
-    ctx.lineWidth = 4;
-
-    for (var r = 1; r < GRID_LINE_COUNT; r++) {
-      ctx.moveTo(GRID_OFFSET_X, GRID_OFFSET_Y + (GRID_ITEM_SIZE * r));
-      ctx.lineTo(GRID_OFFSET_X + GRID_SIZE, GRID_OFFSET_Y + (GRID_ITEM_SIZE * r));
-    }
-
-    for (var c = 1; c < GRID_LINE_COUNT; c++) {
-      ctx.moveTo(GRID_OFFSET_X + (GRID_ITEM_SIZE * c), GRID_OFFSET_Y);
-      ctx.lineTo(GRID_OFFSET_X + (GRID_ITEM_SIZE * c), GRID_OFFSET_Y + GRID_SIZE);
-    }
-
-    ctx.stroke();
+    ctx.fillText(message, canvas.width / 2, 60);
   }
 
   /* control */
 
   function clickHandler(e) {
-    if (!start) {
-      start = true;
-      return;
-    }
-
-    if (result) {
-      start = false;
-      lot = false;
-      return;
-    }
-
+    if (done) return;
     if (turn != USER) return;
     
     var r = Math.floor((e.offsetY - GRID_OFFSET_Y) / GRID_ITEM_SIZE);
@@ -277,8 +214,11 @@
       if (board[row][col] == 0) {
         board[row][col] = USER;
         turn = COM;
+        count++;
       }
     }
   }
 })();
+
+
 
