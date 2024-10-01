@@ -23,6 +23,7 @@
   var drawn;
   var row, col;
   var count = 0;
+  var message = "";
   var board = [
     [0, 0, 0],
     [0, 0, 0],
@@ -50,15 +51,14 @@
 
   // run the game 
   function main() {
-    clearCanvas();
-    drawBoard();
-
     if (count < 2) {
       if (lot == USER) {
-        drawMessage("YOU FIRST");
+        message = "YOU FIRST";
       } else {
-        drawMessage("COM FIRST");
+        message = "COM FIRST";
       }
+    } else {
+      message = "";
     }
 
     bingo = isBingo();
@@ -67,12 +67,12 @@
     if (bingo || drawn) {
       if (bingo) {
         if (bingo == USER) {
-          drawMessage("YOU WIN!");
+          message = "YOU WIN!";
         } else {
-          drawMessage("YOU LOSE!");
+          message = "YOU LOSE!";
         }
       } else {
-        drawMessage("DRAW!");
+        message = "DRAW!";
       }
     } else {
       if (turn == COM) {
@@ -82,6 +82,8 @@
 
       requestAnimationFrame(main);
     }
+
+    render();
   };
 
   main();
@@ -152,11 +154,9 @@
   }
 
   // draw 
-  function clearCanvas() {
+  function render() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-  }
 
-  function drawBoard() {
     // board
     ctx.beginPath();
     ctx.strokeStyle = "#444";
@@ -201,9 +201,8 @@
         ctx.stroke();
       }
     }
-  }
 
-  function drawMessage(message) {
+    // messages
     ctx.font = "20px Monospace";
     ctx.fillStyle = "#fff";
     ctx.textAlign = "center";
