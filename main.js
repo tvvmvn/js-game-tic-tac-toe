@@ -1,186 +1,125 @@
-(function () {
-  // canvas
-  var canvas = document.getElementById("canvas");
-  var ctx = canvas.getContext("2d");
-  canvas.width = innerWidth;
-  canvas.height = innerHeight;
-  canvas.style.backgroundColor = "#222";
-  canvas.addEventListener("click", clickHandler);
+// canvas
+var canvas = document.getElementById("canvas");
+var ctx = canvas.getContext("2d");
+canvas.width = innerWidth;
+canvas.height = innerHeight;
+canvas.style.backgroundColor = "#222";
 
+// Game
+class Game {
   // constants 
-  const GRID_SIZE = 300;
-  const GRID_OFFSET_X = (canvas.width - GRID_SIZE) / 2;
-  const GRID_OFFSET_Y = 100;
-  const GRID_LINE_COUNT = 3;
-  const GRID_ITEM_SIZE = GRID_SIZE / GRID_LINE_COUNT;
-  const USER = 1;
-  const COM = 2;
-
+  GRID_SIZE = 300;
+  GRID_OFFSET_X = (canvas.width - this.GRID_SIZE) / 2;
+  GRID_OFFSET_Y = 100;
+  GRID_LINE_COUNT = 3;
+  GRID_ITEM_SIZE = this.GRID_SIZE / this.GRID_LINE_COUNT;
+  USER = 1;
+  COM = 2;
   // variables 
-  var lot = Math.ceil(Math.random() * 2);
-  var turn = lot;
-  var bingo;
-  var drawn;
-  var row, col;
-  var count = 0;
-  var message = "";
-  var board = [
+  first = Math.ceil(Math.random() * 2);
+  turn = this.first;
+  bingo = 0;
+  drawn = false;
+  count = 0;
+  message = "";
+  board = [
     [0, 0, 0],
     [0, 0, 0],
     [0, 0, 0],
   ]
 
-  // control 
-  function clickHandler(e) {
-    if (turn == USER) {
-      var r = Math.floor((e.offsetY - GRID_OFFSET_Y) / GRID_ITEM_SIZE);
-      var c = Math.floor((e.offsetX - GRID_OFFSET_X) / GRID_ITEM_SIZE);
-  
-      if (r > -1 && r < GRID_LINE_COUNT && c > -1 && c < GRID_LINE_COUNT) {
-        row = r;
-        col = c;
-  
-        if (board[row][col] == 0) {
-          board[row][col] = USER;
-          turn = COM;
-          count++;
-        }
-      }
-    }
-  }
-
-  // run the game 
-  function main() {
-    if (count < 2) {
-      if (lot == USER) {
-        message = "YOU FIRST";
-      } else {
-        message = "COM FIRST";
-      }
-    } else {
-      message = "";
-    }
-
-    bingo = isBingo();
-    drawn = isDrawn();
-
-    if (bingo || drawn) {
-      if (bingo) {
-        if (bingo == USER) {
-          message = "YOU WIN!";
-        } else {
-          message = "YOU LOSE!";
-        }
-      } else {
-        message = "DRAW!";
-      }
-    } else {
-      if (turn == COM) {
-        setTimeout(com, 1000);
-        turn = null;
-      }
-
-      requestAnimationFrame(main);
-    }
-
-    render();
-  };
-
-  main();
-
-  // functions 
-  function com() {
+  getCrds() {
     while (true) {
       var r = Math.floor(Math.random() * 3);
       var c = Math.floor(Math.random() * 3);
 
-      if (board[r][c] == 0) {
-        board[r][c] = COM;
-        count++;
-        break;
+      if (this.board[r][c] == 0) {
+        return [r, c];
       }
     }
-
-    turn = USER;
   }
-
-  function isBingo() {
+  
+  isBingo() {
     // horizontal bingo
     for (var r = 0; r < 3; r++) {
       if (
-        board[r][0] != 0
-        && board[r][0] == board[r][1] 
-        && board[r][1] == board[r][2]
+        this.board[r][0] != 0
+        && this.board[r][0] == this.board[r][1] 
+        && this.board[r][1] == this.board[r][2]
       ) {
-        return board[r][0];
+        this.bingo = this.board[r][0];
+
+        return 0;
       }
     }
     
     // vertical bingo
     for (var c = 0; c < 3; c++) {
       if (
-        board[0][c] != 0
-        && board[0][c] == board[1][c] 
-        && board[1][c] == board[2][c]
+        this.board[0][c] != 0
+        && this.board[0][c] == this.board[1][c] 
+        && this.board[1][c] == this.board[2][c]
       ) {
-        return board[0][c];
+        this.bingo = this.board[0][c];
+
+        return 0;
       }
     }
-
+  
     // cross bingo (\)
     if (
-      board[0][0] != 0
-      && board[0][0] == board[1][1] 
-      && board[1][1] == board[2][2]
+      this.board[0][0] != 0
+      && this.board[0][0] == this.board[1][1] 
+      && this.board[1][1] == this.board[2][2]
     ) {
-      return board[0][0];
-    }
+      this.bingo = this.board[0][0];
 
+      return 0;
+    }
+  
     // cross bingo (/)
     if (
-      board[0][2] != 0
-      && board[0][2] == board[1][1] 
-      && board[1][1] == board[2][0]
+      this.board[0][2] != 0
+      && this.board[0][2] == this.board[1][1] 
+      && this.board[1][1] == this.board[2][0]
     ) {
-      return board[0][2];
+      this.bingo = this.board[0][2];
+
+      return 0;
     }
-    
-    // no bingo
-    return false;
+  }
+  
+  isDrawn() {
+    if (this.count == 9) {
+      this.drawn = true;
+    }
   }
 
-  function isDrawn() {
-    return count == 9;
-  }
-
-  // draw 
-  function render() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // board
+  drawBoard() {
     ctx.beginPath();
     ctx.strokeStyle = "#444";
     ctx.lineWidth = 4;
-
-    for (var r = 1; r < GRID_LINE_COUNT; r++) {
-      ctx.moveTo(GRID_OFFSET_X, GRID_OFFSET_Y + (GRID_ITEM_SIZE * r));
-      ctx.lineTo(GRID_OFFSET_X + GRID_SIZE, GRID_OFFSET_Y + (GRID_ITEM_SIZE * r));
+  
+    for (var r = 1; r < this.GRID_LINE_COUNT; r++) {
+      ctx.moveTo(this.GRID_OFFSET_X, this.GRID_OFFSET_Y + (this.GRID_ITEM_SIZE * r));
+      ctx.lineTo(this.GRID_OFFSET_X + this.GRID_SIZE, this.GRID_OFFSET_Y + (this.GRID_ITEM_SIZE * r));
     }
-
-    for (var c = 1; c < GRID_LINE_COUNT; c++) {
-      ctx.moveTo(GRID_OFFSET_X + (GRID_ITEM_SIZE * c), GRID_OFFSET_Y);
-      ctx.lineTo(GRID_OFFSET_X + (GRID_ITEM_SIZE * c), GRID_OFFSET_Y + GRID_SIZE);
+  
+    for (var c = 1; c < this.GRID_LINE_COUNT; c++) {
+      ctx.moveTo(this.GRID_OFFSET_X + (this.GRID_ITEM_SIZE * c), this.GRID_OFFSET_Y);
+      ctx.lineTo(this.GRID_OFFSET_X + (this.GRID_ITEM_SIZE * c), this.GRID_OFFSET_Y + this.GRID_SIZE);
     }
-
+  
     ctx.stroke();
+  }
 
-    // symbols
-    for (var r = 0; r < board.length; r++) {
-      for (var c = 0; c < board[r].length; c++) {
-        var id = board[r][c];
+  drawSymbol() {
+    for (var r = 0; r < this.board.length; r++) {
+      for (var c = 0; c < this.board[r].length; c++) {
+        var id = this.board[r][c];
 
-        var x = GRID_OFFSET_X + (c * GRID_ITEM_SIZE);
-        var y = GRID_OFFSET_Y + (r * GRID_ITEM_SIZE);
+        var x = this.GRID_OFFSET_X + (c * this.GRID_ITEM_SIZE);
+        var y = this.GRID_OFFSET_Y + (r * this.GRID_ITEM_SIZE);
 
         ctx.beginPath();
         ctx.strokeStyle = "#fff";
@@ -201,14 +140,80 @@
         ctx.stroke();
       }
     }
+  }
 
-    // messages
+  drawMessage(message) {
     ctx.font = "20px Monospace";
     ctx.fillStyle = "#fff";
     ctx.textAlign = "center";
     ctx.fillText(message, canvas.width / 2, 60);
   }
-})();
 
+  clearCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
 
+  render() {
+    this.clearCanvas();
 
+    if (this.count < 2) {
+      if (this.first == this.USER) {
+        this.drawMessage("YOU FIRST");
+      } else {
+        this.drawMessage("COM FIRST");
+      }
+    } else {
+      this.drawMessage("");
+    }
+
+    this.isBingo();
+    this.isDrawn();
+  
+    if (this.bingo) {
+      if (this.bingo == this.USER) {
+        this.drawMessage("YOU WIN!");
+      } else {
+        this.drawMessage("YOU LOSE");
+      }
+    } else if (this.drawn) {
+      this.drawMessage("DRAW!");
+    } else {
+      if (this.turn == this.COM) {
+        setTimeout(() => {
+          var [r, c] = this.getCrds();
+          this.board[r][c] = this.COM;
+
+          this.turn = this.USER;
+          this.count++;
+        }, 1000);
+
+        this.turn = null;
+      }
+
+      requestAnimationFrame(() => this.render());
+    }
+
+    this.drawBoard();
+    this.drawSymbol();
+  }
+
+  clickHandler(e) {
+    if (this.turn == this.USER) {
+      var r = Math.floor((e.offsetY - this.GRID_OFFSET_Y) / this.GRID_ITEM_SIZE);
+      var c = Math.floor((e.offsetX - this.GRID_OFFSET_X) / this.GRID_ITEM_SIZE);
+  
+      if (r > -1 && r < this.GRID_LINE_COUNT && c > -1 && c < this.GRID_LINE_COUNT) {
+        if (this.board[r][c] == 0) {
+          this.board[r][c] = this.USER;
+          this.turn = this.COM;
+          this.count++;
+        }
+      }
+    }
+  }
+}
+
+var game = new Game();
+canvas.addEventListener("click", (e) => game.clickHandler(e));
+
+game.render();
