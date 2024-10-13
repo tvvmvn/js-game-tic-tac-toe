@@ -18,8 +18,6 @@ class Game {
   // variables 
   first = Math.ceil(Math.random() * 2);
   turn = this.first;
-  bingo = 0;
-  drawn = false;
   count = 0;
   message = "";
   board = [
@@ -47,9 +45,7 @@ class Game {
         && this.board[r][0] == this.board[r][1] 
         && this.board[r][1] == this.board[r][2]
       ) {
-        this.bingo = this.board[r][0];
-
-        return 0;
+        return this.board[r][0];
       }
     }
     
@@ -60,9 +56,7 @@ class Game {
         && this.board[0][c] == this.board[1][c] 
         && this.board[1][c] == this.board[2][c]
       ) {
-        this.bingo = this.board[0][c];
-
-        return 0;
+        return this.board[0][c];
       }
     }
   
@@ -72,9 +66,7 @@ class Game {
       && this.board[0][0] == this.board[1][1] 
       && this.board[1][1] == this.board[2][2]
     ) {
-      this.bingo = this.board[0][0];
-
-      return 0;
+      return this.board[0][0];
     }
   
     // cross bingo (/)
@@ -83,16 +75,18 @@ class Game {
       && this.board[0][2] == this.board[1][1] 
       && this.board[1][1] == this.board[2][0]
     ) {
-      this.bingo = this.board[0][2];
-
-      return 0;
+      return this.board[0][2];
     }
+
+    return false;
   }
   
   isDrawn() {
     if (this.count == 9) {
-      this.drawn = true;
+      return true;
     }
+
+    return false;
   }
 
   drawBoard() {
@@ -166,16 +160,19 @@ class Game {
       this.drawMessage("");
     }
 
-    this.isBingo();
-    this.isDrawn();
+    this.drawBoard();
+    this.drawSymbol();
+
+    var bingo = this.isBingo();
+    var drawn = this.isDrawn();
   
-    if (this.bingo) {
-      if (this.bingo == this.USER) {
+    if (bingo) {
+      if (bingo == this.USER) {
         this.drawMessage("YOU WIN!");
       } else {
         this.drawMessage("YOU LOSE");
       }
-    } else if (this.drawn) {
+    } else if (drawn) {
       this.drawMessage("DRAW!");
     } else {
       if (this.turn == this.COM) {
@@ -192,9 +189,6 @@ class Game {
 
       requestAnimationFrame(() => this.render());
     }
-
-    this.drawBoard();
-    this.drawSymbol();
   }
 
   clickHandler(e) {
